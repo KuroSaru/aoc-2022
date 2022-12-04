@@ -1,16 +1,13 @@
 set logging file out.txt
-b *start_read_eol+30
+
+b* _start
+
+b* start_readloop+89
 command
-printf "sum = %d ; CElf =  %d ; expected total = %d \n", $rax, $rbx, $rax+$rbx
-c
+printf "O:r13 = %d ; M:r14 =  %d \n", $r13, $r14
 end
 
-b *start_read_eol+33
+b* start_readloop+123
 command
-printf "calculated total (sum+CElf) = %d \n", $rax
-end
-
-b* start_new_elf
-command
-printf "CElf = %d ; BElf = %d \n", $rax, $rbx
+printf "Sum:rax = %d; S:rbx %d \n", $rax,$rbx
 end
