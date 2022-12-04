@@ -1,0 +1,16 @@
+set logging file out.txt
+b *start_read_eol+30
+command
+printf "sum = %d ; CElf =  %d ; expected total = %d \n", $rax, $rbx, $rax+$rbx
+c
+end
+
+b *start_read_eol+33
+command
+printf "calculated total (sum+CElf) = %d \n", $rax
+end
+
+b* start_new_elf
+command
+printf "CElf = %d ; BElf = %d \n", $rax, $rbx
+end
