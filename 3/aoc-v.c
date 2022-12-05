@@ -1,74 +1,97 @@
 #include <stdio.h>
 #include <string.h>
 
+unsigned char sacks[3][66];
+
+char dupItem(int sc)
+{
+	int sLen = sacks[sc][64];
+	for(int ix = 0; ix < (sLen / 2); ix++)
+	{
+		for(int jx = (sLen / 2); jx < sLen; jx++)
+		{
+			if (sacks[sc][ix] == sacks[sc][jx])
+			{
+				if ((sacks[sc][ix] - 0x61) < 0)
+				{
+					return ( sacks[sc][ix] - 0x41 ) + 27;
+				}
+				else
+				{
+					return ( sacks[sc][ix] - 0x61 ) + 1;
+				}
+			}
+		}
+	}
+}
+
+int readLine(int fd, int sc)
+{
+	unsigned char buff = 0;
+	int i = read(fd, &buff, 1);
+	while ( buff != 0x0a || i <=0 )
+	{
+		sacks[ sc ][ sacks[ sc ][ 64 ] ] = buff;
+		sacks[ sc ][ 64 ] = sacks[ sc ][ 64 ] + 1;
+		i = read(fd, &buff, 1);
+		if (i <= 0) 
+			return i;
+	}
+	return 1;
+}
+
+char getBadge() {
+    for (int ix = 0; ix < sacks[0][64]; ix++) 
+    {
+        for (int jx = 0; jx < sacks[1][64]; jx++) 
+        {
+            for (int kx = 0; kx < sacks[2][64]; kx++) 
+            {
+                if (sacks[0][ix] == sacks[1][jx] && sacks[1][jx] == sacks[2][kx]) 
+                {
+                	if ((sacks[0][ix] - 0x61) < 0)
+					{
+						return ( sacks[0][ix] - 0x41 ) + 27;
+					}
+					else
+					{
+						return ( sacks[0][ix] - 0x61 ) + 1;
+					}
+                }
+            }
+        }   
+    }
+    return 0;
+}
 
 int main()
 {
-
 	int fd = open("input",0666);
+	int sackCount = 3;
+	int myScore = 0;
+	int myScore2 = 0;
+	for(int ix = 0; ix<sackCount; ix++) sacks[ ix ][ 64 ] = 0;
+	sackCount=0;
 
-	unsigned int score = 0;
-	unsigned char buff = 0;
-	unsigned char sack[72];
-	unsigned char ch1[72];
-	unsigned char ch2[72];
-	int c = 0;
-
-	int i = read(fd, &buff, 1);
-
-	memset(&ch1, 0, 72);
-	memset(&ch2, 0, 72);
-	memset(&sack, 0, 72);
-
-	while ( 1 )
+	int readLineStatus = 0;
+	while ( 1 ) 
 	{
-		while ( i > 0 )
+		readLineStatus = readLine(fd, sackCount);
+		sackCount = sackCount + 1;
+		if ((readLineStatus <= 0) || (sackCount == 3))
 		{
-			if (buff != 0x0a)
-			{
-				sack[c++] = buff; 
-			}
-			else
-			{
-				if (c == 0) //end of rucksack found
-					break;
-				//printf("len: %d / 50% = %d\n", (c-1), ((c-1)/2));
-				c = ( ( c - 1 ) / 2) ; //split count in half
+			for( int sci = 0; sci <= sackCount; sci++ ) myScore += dupItem(sci);
+			
+			myScore2+=getBadge();
 
-				//parse halfs
-				for(int index = 0; index < c; index++)
-				{
-					ch1[ ( ( sack[index] ) - 0x41 ) ] += 1;
-					ch2[ ( ( sack[index + c] ) - 0x41 ) ] += 1;
-				}
-
-				//find pairs
-				for(int index = 0; index < 72; index++)
-				{
-					if ((ch1[index]>0) && (ch2[index]>0))
-					{
-						/*
-						if (((index) - 0x1f) < 0)
-							printf("%c %x %d\n", index+0x41, index+0x41, index + 27);
-						else
-							printf("%c %x %d\n", index+0x41, index+0x41, (index) - 0x1f);
-						*/
-						score += ( ((index - 0x1f) < 0) ? (index + 27) : ( index - 0x1f ) ) ;
-					}
-				}
-
-				c = 0;
-				//reset memory.
-				memset(&ch1, 0, 72);
-				memset(&ch2, 0, 72);
-				memset(&sack, 0, 72);
-			}
-			i = read(fd, &buff, 1);
+			for(int ix = 0; ix<sackCount; ix++) sacks[ ix ][ 64 ] = 0;
+			sackCount = 0;
 		}
-		if (c == 0) break;
-	}
 
+		if (readLineStatus <= 0) break;
+	}
 	printf("AOC-C Verification:\n");
-	printf("My Score: %d\n", score);
-	
+	printf("My Score: %d\n", myScore);
+	printf("My Score2: %d\n", myScore2);
+	exit(0);
 }
